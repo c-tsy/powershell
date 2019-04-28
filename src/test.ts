@@ -1,8 +1,3 @@
-# powershell
-use powershell in nodejs
-
-## example
-```typescript
 import PowerShell from './index';
 (async () => {
     let p = new PowerShell()
@@ -20,11 +15,3 @@ import PowerShell from './index';
 function timeout(n: number) {
     return new Promise((s) => setTimeout(s, n))
 }
-```
-the result
-```
-1                   test.ts:5
-2                   test.ts:6
-True                test.ts:7
-False               test.ts:8
-```

@@ -1,0 +1,21 @@
+{
+  "name": "@ctsy/powershell",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/c-tsy/powershell",
+  "author": "CastleMY <490523604@qq.com>",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "README.md"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "execa": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/execa": "^0.9.0",
+    "@types/node": "^11.13.8"
+  }
+}
