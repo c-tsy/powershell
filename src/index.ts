@@ -28,9 +28,13 @@ export default class PowerShell {
         let index = this.str.indexOf(this.endStr);
         if (index > -1) {
             if (this.promise.s instanceof Function) {
-                let r = this.str.substr(this.promise.d, this.str.length - this.endStr.length - this.promise.d)
-                // setTimeout(() => {
-                this.promise.s(r);
+                if (this.str.indexOf('At line') > 10) {
+                    this.promise.j(this.str)
+                } else {
+                    let r = this.str.substr(this.promise.d, this.str.length - this.endStr.length - this.promise.d)
+                    // setTimeout(() => {
+                    this.promise.s(r);
+                }
                 this.promise = { d: 0 };
                 // }, 1)
             }
