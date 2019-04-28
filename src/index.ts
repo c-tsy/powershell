@@ -2,7 +2,20 @@ import execa = require("execa");
 
 export default class PowerShell {
     process: execa.ExecaChildProcess;
-    promise: { s?: Function, j?: Function, d: number, o?: string } = { d: 0 };
+    protected _promise: { s?: Function, j?: Function, d: number, o?: string } = { d: 0 };
+    get promise() {
+        return this._promise;
+    }
+    set promise(v) {
+        if (!v.s && this._wait.length > 0) {
+            let cmd = this._wait.shift();
+            this._promise = { d: cmd.d.length, o: cmd.d, s: cmd.s, j: cmd.s }
+            this.process.stdin.write(cmd);
+        } else {
+            this._promise = v;
+        }
+    }
+    protected _wait: { d: string, s: Function, j: Function }[] = [];
     started: number = -2;
     endStr: string = "";
     str: string = "";
@@ -55,11 +68,15 @@ export default class PowerShell {
         this.process.kill()
     }
     cmd(cmd: string) {
-        if (this.promise.s) { throw new Error('Busy') }
+        if (!cmd.endsWith('\n')) {
+            cmd = cmd + '\r\n'
+        }
+        if (this.promise.s) {
+            return new Promise((s, j) => {
+                this._wait.push({ d: cmd, s, j })
+            })
+        }
         return new Promise((s, j) => {
-            if (!cmd.endsWith('\n')) {
-                cmd = cmd + '\r\n'
-            }
             this.promise = { s, j, d: cmd.length, o: cmd }
             this.process.stdin.write(cmd)
         })

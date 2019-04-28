@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const execa = require("execa");
 class PowerShell {
     constructor() {
-        this.promise = { d: 0 };
+        this._promise = { d: 0 };
+        this._wait = [];
         this.started = -2;
         this.endStr = "";
         this.str = "";
@@ -18,6 +19,19 @@ class PowerShell {
             this.error(data);
         });
         this.process.stdin.write('');
+    }
+    get promise() {
+        return this._promise;
+    }
+    set promise(v) {
+        if (!v.s && this._wait.length > 0) {
+            let cmd = this._wait.shift();
+            this._promise = { d: cmd.d.length, o: cmd.d, s: cmd.s, j: cmd.s };
+            this.process.stdin.write(cmd);
+        }
+        else {
+            this._promise = v;
+        }
     }
     data(data) {
         if (this.started < 0) {
@@ -54,13 +68,15 @@ class PowerShell {
         this.process.kill();
     }
     cmd(cmd) {
+        if (!cmd.endsWith('\n')) {
+            cmd = cmd + '\r\n';
+        }
         if (this.promise.s) {
-            throw new Error('Busy');
+            return new Promise((s, j) => {
+                this._wait.push({ d: cmd, s, j });
+            });
         }
         return new Promise((s, j) => {
-            if (!cmd.endsWith('\n')) {
-                cmd = cmd + '\r\n';
-            }
             this.promise = { s, j, d: cmd.length, o: cmd };
             this.process.stdin.write(cmd);
         });
