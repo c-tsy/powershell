@@ -1,10 +1,14 @@
 {
   "name": "@ctsy/powershell",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "repository": "https://github.com/c-tsy/powershell",
   "author": "CastleMY <490523604@qq.com>",
   "types": "dist/index.d.ts",
+  "keywords": [
+    "powershell",
+    "execa"
+  ],
   "files": [
     "dist/index.js",
     "dist/index.d.ts",
