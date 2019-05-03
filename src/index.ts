@@ -1,5 +1,7 @@
 import execa = require("execa");
-
+import { Iconv } from 'iconv'
+const g2u = new Iconv('GB2312', 'UTF-8')
+const u2g = new Iconv('GB2312', 'UTF-8')
 export default class PowerShell {
     process: execa.ExecaChildProcess;
     protected _promise: { s?: Function, j?: Function, d: number, o?: string } = { d: 0 };
@@ -21,32 +23,37 @@ export default class PowerShell {
     str: string = "";
     constructor() {
         this.endStr = `PS ${process.cwd()}> `
+        // this.endStr.
         this.process = execa('powershell.exe', [], { cwd: process.cwd() })
         this.process.stdout.on('data', (data) => {
-            this.str = this.str + data.toString('utf8')
-            this.data(data);
+            this.str = this.str + g2u.convert(data).toString('utf8')
+            this.data();
         })
         this.process.stderr.on('data', (data) => {
             this.str = this.str + data.toString('utf8')
             this.error(data)
         })
-        this.process.stdin.write('')
+        // this.process.stdin.write('\r\n')
     }
-    protected data(data) {
+    protected data() {
         if (this.started < 0) {
-            this.started++;
+            if (this.str.indexOf('\r\n\r\n') > -1) {
+                this.started = 1
+            }
             this.str = "";
             return;
         }
-        let index = this.str.indexOf(this.endStr);
-        if (index > -1) {
+        // let c = this.endStr + this._promise.o.substr(0, this._promise.d - 2);
+        let index = this.str.split(this.endStr);
+        if (index.length > 1 && index[index.length - 2].length > 0) {
             if (this.promise.s instanceof Function) {
+                this.str = index[index.length - 2].substr(this.promise.d).replace(/[\r\n]{1,}/, '').replace(/[\r\n]{1,}$/, '')
                 if (this.str.indexOf('At line') > 10) {
                     this.promise.j(this.str)
                 } else {
-                    let r = this.str.substr(this.promise.d, this.str.length - this.endStr.length - this.promise.d)
+                    // let r = this.str.substr(this.promise.d + 2, this.str.length - this.promise.d)
                     // setTimeout(() => {
-                    this.promise.s(r);
+                    this.promise.s(this.str);
                 }
                 this.promise = { d: 0 };
                 // }, 1)
@@ -67,6 +74,9 @@ export default class PowerShell {
     exit() {
         this.process.kill()
     }
+    write(s: string) {
+        this.process.stdin.write(u2g.convert(Buffer.from(s)))
+    }
     cmd(cmd: string) {
         if (!cmd.endsWith('\n')) {
             cmd = cmd + '\r\n'
@@ -78,7 +88,7 @@ export default class PowerShell {
         }
         return new Promise((s, j) => {
             this.promise = { s, j, d: cmd.length, o: cmd }
-            this.process.stdin.write(cmd)
+            this.write(cmd)
         })
     }
 }
