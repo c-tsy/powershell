@@ -4,20 +4,10 @@ const g2u = new Iconv('GB2312', 'UTF-8')
 const u2g = new Iconv('GB2312', 'UTF-8')
 export default class PowerShell {
     process: execa.ExecaChildProcess;
-    protected _promise: { s?: Function, j?: Function, d: number, o?: string } = { d: 0 };
-    get promise() {
-        return this._promise;
-    }
-    set promise(v) {
-        if (!v.s && this._wait.length > 0) {
-            let cmd = this._wait.shift();
-            this._promise = { d: cmd.d.length, o: cmd.d, s: cmd.s, j: cmd.s }
-            this.process.stdin.write(cmd);
-        } else {
-            this._promise = v;
-        }
-    }
-    protected _wait: { d: string, s: Function, j: Function }[] = [];
+    protected _promise: {i:number, s?: Function, j?: Function, d: string,t:number } = { d: "",t:0 ,i:0};
+    
+    protected _wait: { i: number, d: string, s: Function, j: Function, t: number }[] = [];
+    id: number = 0;
     started: number = -2;
     endStr: string = "";
     str: string = "";
@@ -43,52 +33,67 @@ export default class PowerShell {
             this.str = "";
             return;
         }
-        // let c = this.endStr + this._promise.o.substr(0, this._promise.d - 2);
+        if (!this.str.endsWith(this.endStr)) { return;}
         let index = this.str.split(this.endStr);
         if (index.length > 1 && index[index.length - 2].length > 0) {
-            if (this.promise.s instanceof Function) {
-                this.str = index[index.length - 2].substr(this.promise.d).replace(/[\r\n]{1,}/, '').replace(/[\r\n]{1,}$/, '')
-                if (this.str.indexOf('At line') > 10) {
-                    this.promise.j(this.str)
-                } else {
-                    // let r = this.str.substr(this.promise.d + 2, this.str.length - this.promise.d)
-                    // setTimeout(() => {
-                    this.promise.s(this.str);
-                }
-                this.promise = { d: 0 };
-                // }, 1)
+            this.str = index[index.length - 2].substr(this._promise.d.length).replace(/[\r\n]{1,}/, '').replace(/[\r\n]{1,}$/, '')
+            if (this.str.indexOf('At line') > 10) {
+                this.reject(this.str,this._promise.i)
+            } else {
+                this.resolve(this.str)
             }
             this.str = "";
         }
     }
     protected error(data) {
         if (this.str.endsWith(this.endStr)) {
-            if (this.promise.s instanceof Function) {
-                let r = this.str.substr(this.promise.d, this.str.length - this.endStr.length - this.promise.d)
-                this.promise.j(r);
-                this.promise = { d: 0 };
-            }
+            let r = this.str.substr(this._promise.d.length, this.str.length - this.endStr.length - this._promise.d.length)
+            this.reject(r,this._promise.i)
             this.str = "";
         }
     }
     exit() {
         this.process.kill()
     }
+    resolve(data: any) {
+        if (this._promise.s) {
+            this._promise.s(data);
+        }
+        this.next()
+     }
+    reject(data: any,i) {
+        if (this._promise.j&&this._promise.i==i) {
+            this._promise.j(data);
+        }
+        this.next()
+     }
+    next() {        
+        if (this._wait.length > 0) {
+            this._promise = this._wait.shift();        
+            this.write(this._promise.d)
+            if (this._promise.t) {
+                setTimeout(() => {
+                    this.reject('Timeout',this._promise.i)
+                })
+            }
+        }
+    }
     write(s: string) {
         this.process.stdin.write(u2g.convert(Buffer.from(s)))
     }
-    cmd(cmd: string) {
+    cmd(cmd: string,timeout=0) {
         if (!cmd.endsWith('\n')) {
             cmd = cmd + '\r\n'
         }
-        if (this.promise.s) {
+        if (this._promise.s) {
             return new Promise((s, j) => {
-                this._wait.push({ d: cmd, s, j })
+                this._wait.push({ i:this.id++,d: cmd, s, j,t:timeout })
             })
         }
         return new Promise((s, j) => {
-            this.promise = { s, j, d: cmd.length, o: cmd }
+            this._promise = { i: this.id++, d: cmd, s, j, t: timeout }
             this.write(cmd)
+            // if()
         })
     }
 }
