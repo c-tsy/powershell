@@ -4,7 +4,7 @@ const g2u = new Iconv('GB2312', 'UTF-8')
 const u2g = new Iconv('GB2312', 'UTF-8')
 export default class PowerShell {
     process: execa.ExecaChildProcess;
-    protected _promise: {i:number, s?: Function, j?: Function, d: string,t:number } = { d: "",t:0 ,i:0};
+    protected _promise: {i:number, s?: Function, j?: Function, d: string,t:number } = { d: "",t:0 ,i:-1};
     
     protected _wait: { i: number, d: string, s: Function, j: Function, t: number }[] = [];
     id: number = 0;
@@ -76,6 +76,8 @@ export default class PowerShell {
                     this.reject('Timeout',this._promise.i)
                 })
             }
+        } else {
+            this._promise = { i: -1, d: '', t: 0 }
         }
     }
     write(s: string) {

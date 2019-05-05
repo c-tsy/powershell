@@ -6,7 +6,7 @@ const g2u = new iconv_1.Iconv('GB2312', 'UTF-8');
 const u2g = new iconv_1.Iconv('GB2312', 'UTF-8');
 class PowerShell {
     constructor() {
-        this._promise = { d: "", t: 0, i: 0 };
+        this._promise = { d: "", t: 0, i: -1 };
         this._wait = [];
         this.id = 0;
         this.started = -2;
@@ -77,6 +77,9 @@ class PowerShell {
                     this.reject('Timeout', this._promise.i);
                 });
             }
+        }
+        else {
+            this._promise = { i: -1, d: '', t: 0 };
         }
     }
     write(s) {
