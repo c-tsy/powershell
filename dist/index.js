@@ -24,13 +24,13 @@ class PowerShell {
         });
     }
     data() {
-        if (this.started < 0) {
-            if (this.str.indexOf('\r\n\r\n') > -1) {
-                this.started = 1;
-            }
-            this.str = "";
-            return;
-        }
+        // if (this.started < 0) {
+        //     if (this.str.indexOf('\r\n\r\n') > -1) {
+        //         this.started = 1;
+        //     }
+        //     this.str = "";
+        //     return;
+        // }
         if (!this.str.endsWith(this.endStr)) {
             return;
         }
