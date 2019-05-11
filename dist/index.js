@@ -24,13 +24,13 @@ class PowerShell {
         });
     }
     data() {
-        // if (this.started < 0) {
-        //     if (this.str.indexOf('\r\n\r\n') > -1) {
-        //         this.started = 1;
-        //     }
-        //     this.str = "";
-        //     return;
-        // }
+        if (this.started < 0) {
+            if (this.str.indexOf('\r\n\r\n') > -1) {
+                this.started = 1;
+            }
+            this.str = "";
+            return;
+        }
         if (!this.str.endsWith(this.endStr)) {
             return;
         }
@@ -75,7 +75,7 @@ class PowerShell {
             if (this._promise.t) {
                 setTimeout(() => {
                     this.reject('Timeout', this._promise.i);
-                });
+                }, this._promise.t);
             }
         }
         else {
@@ -89,14 +89,20 @@ class PowerShell {
         if (!cmd.endsWith('\n')) {
             cmd = cmd + '\r\n';
         }
+        let i = this.id++;
         if (this._promise.s) {
             return new Promise((s, j) => {
-                this._wait.push({ i: this.id++, d: cmd, s, j, t: timeout });
+                this._wait.push({ i, d: cmd, s, j, t: timeout });
             });
         }
         return new Promise((s, j) => {
-            this._promise = { i: this.id++, d: cmd, s, j, t: timeout };
+            this._promise = { i, d: cmd, s, j, t: timeout };
             this.write(cmd);
+            if (timeout) {
+                setTimeout(() => {
+                    this.reject('Timeout', i);
+                }, timeout);
+            }
         });
     }
 }

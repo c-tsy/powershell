@@ -55,18 +55,30 @@ export default class PowerShell {
     exit() {
         this.process.kill()
     }
+    /**
+     * 成功
+     * @param data 
+     */
     resolve(data: any) {
         if (this._promise.s) {
             this._promise.s(data);
         }
         this.next()
-     }
+    }
+    /**
+     * 失败
+     * @param data 
+     * @param i 
+     */
     reject(data: any,i) {
         if (this._promise.j&&this._promise.i==i) {
             this._promise.j(data);
         }
         this.next()
-     }
+    }
+    /**
+     * 切换到wait中的下一个
+     */
     next() {        
         if (this._wait.length > 0) {
             this._promise = this._wait.shift();        
@@ -74,28 +86,42 @@ export default class PowerShell {
             if (this._promise.t) {
                 setTimeout(() => {
                     this.reject('Timeout',this._promise.i)
-                })
+                },this._promise.t)
             }
         } else {
             this._promise = { i: -1, d: '', t: 0 }
         }
     }
+    /**
+     * 发送命令
+     * @param s 
+     */
     write(s: string) {
         this.process.stdin.write(u2g.convert(Buffer.from(s)))
     }
+    /**
+     * 发送cmd命令
+     * @param cmd 
+     * @param timeout 
+     */
     cmd(cmd: string,timeout=0) {
         if (!cmd.endsWith('\n')) {
             cmd = cmd + '\r\n'
         }
+        let i = this.id++;
         if (this._promise.s) {
             return new Promise((s, j) => {
-                this._wait.push({ i:this.id++,d: cmd, s, j,t:timeout })
+                this._wait.push({ i, d: cmd, s, j, t: timeout })
             })
         }
         return new Promise((s, j) => {
-            this._promise = { i: this.id++, d: cmd, s, j, t: timeout }
+            this._promise = { i, d: cmd, s, j, t: timeout }
             this.write(cmd)
-            // if()
+            if (timeout) {
+                setTimeout(() => {
+                    this.reject('Timeout',i)
+                },timeout)
+            }
         })
     }
 }
