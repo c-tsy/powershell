@@ -24,13 +24,6 @@ class PowerShell {
         });
     }
     data() {
-        if (this.started < 0) {
-            if (this.str.indexOf('\r\n\r\n') > -1) {
-                this.started = 1;
-            }
-            this.str = "";
-            return;
-        }
         if (!this.str.endsWith(this.endStr)) {
             return;
         }
@@ -98,11 +91,6 @@ class PowerShell {
         return new Promise((s, j) => {
             this._promise = { i, d: cmd, s, j, t: timeout };
             this.write(cmd);
-            if (timeout) {
-                setTimeout(() => {
-                    this.reject('Timeout', i);
-                }, timeout);
-            }
         });
     }
 }

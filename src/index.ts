@@ -26,13 +26,13 @@ export default class PowerShell {
         // this.process.stdin.write('\r\n')
     }
     protected data() {
-        if (this.started < 0) {
-            if (this.str.indexOf('\r\n\r\n') > -1) {
-                this.started = 1
-            }
-            this.str = "";
-            return;
-        }
+        // if (this.started < 0) {
+        //     if (this.str.indexOf('\r\n\r\n') > -1) {
+        //         this.started = 1
+        //     }
+        //     this.str = "";
+        //     return;
+        // }
         if (!this.str.endsWith(this.endStr)) { return;}
         let index = this.str.split(this.endStr);
         if (index.length > 1 && index[index.length - 2].length > 0) {
@@ -117,11 +117,11 @@ export default class PowerShell {
         return new Promise((s, j) => {
             this._promise = { i, d: cmd, s, j, t: timeout }
             this.write(cmd)
-            if (timeout) {
-                setTimeout(() => {
-                    this.reject('Timeout',i)
-                },timeout)
-            }
+            // if (timeout) {
+            //     setTimeout(() => {
+            //         this.reject('Timeout',i)
+            //     },timeout)
+            // }
         })
     }
 }
